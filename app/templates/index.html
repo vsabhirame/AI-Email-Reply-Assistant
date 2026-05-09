@@ -1,7 +1,185 @@
-<textarea name="email"></textarea>
-<select name="tone">
-  <option>Professional</option>
-  <option>Friendly</option>
-  <option>Concise</option>
-</select>
-<button>Generate</button>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Email Reply Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            min-height: 120px;
+            box-sizing: border-box;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result-section {
+            margin-top: 30px;
+            display: none;
+        }
+        .result-section.show {
+            display: block;
+        }
+        .reply-text {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .error {
+            color: #d32f2f;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .loading {
+            color: #1976d2;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Email Reply Assistant</h1>
+        
+        <form id="emailForm">
+            <div class="form-group">
+                <label for="email">Enter the email you want to reply to:</label>
+                <textarea id="email" name="email" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="tone">Select reply tone:</label>
+                <select id="tone" name="tone" required>
+                    <option value="">-- Select a tone --</option>
+                    <option value="Professional">Professional</option>
+                    <option value="Friendly">Friendly</option>
+                    <option value="Concise">Concise</option>
+                </select>
+            </div>
+            
+            <button type="button" id="generateBtn" onclick="generateReply()">Generate Reply</button>
+        </form>
+        
+        <div id="errorMsg" class="error"></div>
+        
+        <div id="resultSection" class="result-section">
+            <h2>Generated Reply:</h2>
+            <div class="reply-text" id="replyText"></div>
+        </div>
+    </div>
+
+    <script>
+        async function generateReply() {
+            const email = document.getElementById('email').value;
+            const tone = document.getElementById('tone').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const resultSection = document.getElementById('resultSection');
+            const replyText = document.getElementById('replyText');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // Clear previous errors
+            errorMsg.classList.remove('show');
+            errorMsg.textContent = '';
+            
+            // Validate inputs
+            if (!email.trim()) {
+                errorMsg.textContent = 'Please enter an email';
+                errorMsg.classList.add('show');
+                return;
+            }
+            if (!tone) {
+                errorMsg.textContent = 'Please select a tone';
+                errorMsg.classList.add('show');
+                return;
+            }
+            
+            // Disable button and show loading
+            generateBtn.disabled = true;
+            replyText.innerHTML = '<span class="loading">Generating reply...</span>';
+            resultSection.classList.add('show');
+            
+            try {
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('tone', tone);
+                
+                const response = await fetch('/reply', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                replyText.textContent = data.reply;
+            } catch (error) {
+                errorMsg.textContent = `Error: ${error.message}`;
+                errorMsg.classList.add('show');
+                resultSection.classList.remove('show');
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

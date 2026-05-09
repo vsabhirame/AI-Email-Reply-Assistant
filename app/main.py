@@ -1,17 +1,39 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, Form
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, FileResponse
 from starlette.requests import Request
+from openai import OpenAI
+
+load_dotenv("../.env")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+print("KEY FOUND:", os.getenv("OPENAI_API_KEY") is not None)
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
 
 def generate_reply(email, tone):
-    return f"[{tone}] Thanks for your email. I will get back to you shortly."
+    prompt = f"""
+Write a {tone.lower()} professional email reply.
+
+Email:
+{email}
+
+Reply:
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return response.choices[0].message.content
+
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+def home():
+    with open("templates/index.html", "r") as f:
+        return f.read()
+
 
 @app.post("/reply")
 async def reply(email: str = Form(...), tone: str = Form(...)):

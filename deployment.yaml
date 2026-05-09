@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-ai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: email-ai
+  template:
+    metadata:
+      labels:
+        app: email-ai
+    spec:
+      containers:
+      - name: email-ai
+        image: ai-email-assistant:latest
+        ports:
+        - containerPort: 8000
